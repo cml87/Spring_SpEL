@@ -2,6 +2,9 @@ package com.example.speldemo;
 
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.security.SecureRandom;
 
 public class AppExpressionParser {
 
@@ -26,6 +29,18 @@ public class AppExpressionParser {
         String str = "'Hello World'.length() > 10 and 'Hello World'.length()<20";
         Expression e5 = spelExpressionParser.parseExpression(str);
         System.out.println(e5.getValue()); // true
+
+        System.out.println("____________");
+        StandardEvaluationContext sec1 = new StandardEvaluationContext();
+        sec1.setVariable("greeting","Hello USA");
+        String msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec1);
+        System.out.println(msg); // USA
+
+        StandardEvaluationContext sec2 = new StandardEvaluationContext();
+        sec2.setVariable("greeting","Hello UK");
+        msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec2);
+        System.out.println(msg); // UK
+
 
     }
 

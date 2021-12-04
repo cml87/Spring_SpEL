@@ -93,4 +93,19 @@ public class AppExpressionParser {
 
 ## Evaluation context
 
-An Evaluation Context is a "context" in which we define key-value pairs for properties. When we want to parse an expression having variables, we need to specify the context in which we want to look for and substitute the values of those variables. For example: 
+An Evaluation Context is a "context" in which we define key-value pairs for variables or properties. When we parse a SpEL string having variables we obtain an `Expression` object. If we want the values of the variables to be substituted, we need to pass to the `getValue()` method seen above the context where those variables are defined.  For example:
+ ```java
+        StandardEvaluationContext sec1 = new StandardEvaluationContext();
+        sec1.setVariable("greeting","Hello USA");
+        String msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec1);
+        System.out.println(msg); // USA
+
+        StandardEvaluationContext sec2 = new StandardEvaluationContext();
+        sec2.setVariable("greeting","Hello UK");
+        msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec2);
+        System.out.println(msg); // UK
+```
+In other words, an evaluation context allow resolving fields when evaluating expressions.
+
+An evaluation context can also be used to set values of properties of a bean. For this, we must instantiate it with the bean. The pattern is as fallow:
+
