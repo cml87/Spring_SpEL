@@ -1,5 +1,7 @@
 package com.example.speldemo;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -40,7 +42,15 @@ public class AppExpressionParser {
         sec2.setVariable("greeting","Hello UK");
         msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec2);
         System.out.println(msg); // UK
+        System.out.println("____________");
 
+        //User user = new User();
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        User user = applicationContext.getBean("user", User.class);
+
+        StandardEvaluationContext sec3 = new StandardEvaluationContext(user);
+        spelExpressionParser.parseExpression("country").setValue(sec3,"Canada");
+        System.out.println(user.getCountry()); // Canada
 
     }
 

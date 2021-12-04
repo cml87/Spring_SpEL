@@ -107,5 +107,23 @@ An Evaluation Context is a "context" in which we define key-value pairs for vari
 ```
 In other words, an evaluation context allow resolving fields when evaluating expressions.
 
-An evaluation context can also be used to set values of properties of a bean. For this, we must instantiate it with the bean. The pattern is as fallow:
+An evaluation context can also be used to set values of properties of a Spring bean, or a simple POJO. For this, we must instantiate it with the bean. The pattern is as fallow:
+
+```java
+@Component("user")
+public class User {
+
+    private String name, age, country, language, timeZone;
+
+    // getters and setters
+}
+```
+```java
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        User user = applicationContext.getBean("user", User.class);
+   
+        StandardEvaluationContext sec3 = new StandardEvaluationContext(user);
+        spelExpressionParser.parseExpression("country").setValue(sec3,"Canada");
+        System.out.println(user.getCountry()); // Canada
+```
 
