@@ -7,6 +7,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.security.SecureRandom;
+import java.util.Properties;
 
 public class AppExpressionParser {
 
@@ -48,9 +49,54 @@ public class AppExpressionParser {
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
         User user = applicationContext.getBean("user", User.class);
 
-        StandardEvaluationContext sec3 = new StandardEvaluationContext(user);
-        spelExpressionParser.parseExpression("country").setValue(sec3,"Canada");
+        StandardEvaluationContext userContext = new StandardEvaluationContext(user);
+        spelExpressionParser.parseExpression("country").setValue(userContext,"Canada");
         System.out.println(user.getCountry()); // Canada
+
+        System.out.println("____________________");
+        final Properties properties = System.getProperties();
+
+        // instantiate an evaluation context
+        StandardEvaluationContext propsContext = new StandardEvaluationContext();
+
+        // set a property in the evaluation context. The property will be of type java.util.Properties
+        propsContext.setVariable("systemProperties", properties);
+
+        // set the expression, but do not evaluate it yet.
+        // Expression expCountry = ;
+
+        // use the evaluation context to parse an expression
+        String valCountry = (String) spelExpressionParser.parseExpression("#systemProperties['user.country']")
+                                    .getValue(propsContext);
+
+        System.out.println("VM option is: "+ valCountry);
+        spelExpressionParser.parseExpression("country").setValue(userContext, valCountry);
+        System.out.println(user.getCountry()); // CU
+
+        System.out.println("------------------");
+        SpelExpressionParser parser = new SpelExpressionParser();
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        context.setVariable("user",new User());
+        Expression expression = parser.parseExpression("#user.sayHello()");
+        System.out.println(expression.getValue(context));
+
+
+        //-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
+        /*
+        StandardEvaluationContext propsContext = new StandardEvaluationContext();
+        propsContext.setVariable("systemProperties",System.getProperties());
+        Expression expCountry = parser.parseExpression("#systemProperties['user.country']");
+        parser.parseExpression("country").setValue(userContext,expCountry.getValue(propsContext));
+        System.out.println(user.getCountry());
+
+        Expression expLanguage = parser.parseExpression("#systemProperties['user.language']");
+        parser.parseExpression("language").setValue(userContext,expLanguage.getValue(propsContext));
+        System.out.println(user.getLanguage());
+
+        Expression expTimeZone = parser.parseExpression("#systemProperties['user.timezone']");
+        parser.parseExpression("timeZone").setValue(userContext,expTimeZone.getValue(propsContext));
+        System.out.println(user.getTimeZone());
+        * */
 
     }
 

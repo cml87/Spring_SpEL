@@ -13,7 +13,7 @@ Spring Expression Language SpEL is a powerful tool that allow to manipulate and 
 With SpEL we evaluate string expression at run time. The result of the evaluation can be used to dynamically inject beans,  or values into beans.
 
 ## SpEL syntax
-SpEL expressions are always strings enclosed in double quotes. If we are accessing defined variables in the expression, we use a hash symbol (#) before the variable, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes  
+SpEL expressions are always strings enclosed in double quotes. If we are accessing variables in the expression, we use a hash symbol (#) before the variable name, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes `'...'`.  
 
 SpEL can be used in plain old Java code, it only needs Spring core libraries. Here is a pom file with the needed dependencies, followed by some example use cases in a main() method.
 
@@ -65,26 +65,26 @@ public class AppExpressionParser {
 
     public static void main(String[] args){
 
-        SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+        SpelExpressionParser parser = new SpelExpressionParser();
 
-        Expression e1 = spelExpressionParser.parseExpression("'Hello World'");
+        Expression e1 = parser.parseExpression("'Hello World'");
 
         String message = (String) e1.getValue();
         System.out.println(message); // Hello World
 
-        Expression e2 = spelExpressionParser.parseExpression("'Hello World'.length()");
+        Expression e2 = parser.parseExpression("'Hello World'.length()");
         System.out.println(e2.getValue()); // 11
 
-        Expression e3 = spelExpressionParser.parseExpression("'Hello World'.length()*10");
+        Expression e3 = parser.parseExpression("'Hello World'.length()*10");
         System.out.println(e3.getValue()); // 110
 
-        Expression e4 = spelExpressionParser.parseExpression("'Hello World'.length() > 10");
+        Expression e4 = parser.parseExpression("'Hello World'.length() > 10");
         System.out.println(e4.getValue()); // true
 
         
         // use of logical operator
         String str = "'Hello World'.length() > 10 and 'Hello World'.length()<20";
-        Expression e5 = spelExpressionParser.parseExpression(str);
+        Expression e5 = parser.parseExpression(str);
         System.out.println(e5.getValue()); // true
 
     }
@@ -93,28 +93,51 @@ public class AppExpressionParser {
 
 ## Evaluation context
 
-An Evaluation Context is a "context" in which we define key-value pairs for variables or properties. When we parse a SpEL string having variables we obtain an `Expression` object. If we want the values of the variables to be substituted, we need to pass to the `getValue()` method seen above the context where those variables are defined.  For example:
+### setting and accessing variables (objects) in an evaluation context
+An Evaluation Context is a "context" in which we define key-value pairs for variables or properties. Keys must always be strings. Values can be any object.
+
+When we parse a SpEL string having variables we obtain an `Expression` object. If we want the values of the variables to be substituted, we need to pass to the `getValue()` method seen above the context where those variables are defined.  For example:
  ```java
         StandardEvaluationContext sec1 = new StandardEvaluationContext();
         sec1.setVariable("greeting","Hello USA");
-        String msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec1);
+        String msg = (String) parser.parseExpression("#greeting.substring(6)").getValue(sec1);
         System.out.println(msg); // USA
 
         StandardEvaluationContext sec2 = new StandardEvaluationContext();
         sec2.setVariable("greeting","Hello UK");
-        msg = (String) spelExpressionParser.parseExpression("#greeting.substring(6)").getValue(sec2);
+        msg = (String) parser.parseExpression("#greeting.substring(6)").getValue(sec2);
         System.out.println(msg); // UK
 ```
 In other words, an evaluation context allow resolving fields when evaluating expressions.
 
-An evaluation context can also be used to set values of properties of a Spring bean, or a simple POJO. For this, we must instantiate it with the bean. The pattern is as fallow:
+In the example above, `greetings` is a variable defined in the evaluation context, and whose value is a String object. In the string expression we then access method `substring()` of this object. 
 
+In general, with SpEL we can access members fields and methods of any object added to the evaluation context. Suppose we have an object `User` with a method `sayHello()` as shown in below. We can call this method using SpEL if we first add the object to an evaluation context:
+```java
+        SpelExpressionParser parser = new SpelExpressionParser();
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        
+        context.setVariable("user",new User());
+
+        Expression expression = parser.parseExpression("#user.sayHello()");
+
+        System.out.println(expression.getValue(context));
+```
+
+This technique can be used to access values of 
+
+### setting fields of a bean
+If an evaluation context is initialized with an object, we can later use it to set values of fields of this object. The object can be a Spring bean, or a simple POJO. The pattern is as fallow:
 ```java
 @Component("user")
 public class User {
 
     private String name, age, country, language, timeZone;
 
+    public String sayHello (){
+        return "Hello from user object!";
+    }
+    
     // getters and setters
 }
 ```
@@ -123,7 +146,35 @@ public class User {
         User user = applicationContext.getBean("user", User.class);
    
         StandardEvaluationContext sec3 = new StandardEvaluationContext(user);
-        spelExpressionParser.parseExpression("country").setValue(sec3,"Canada");
+        parser.parseExpression("country").setValue(sec3,"Canada");
         System.out.println(user.getCountry()); // Canada
 ```
+
+### accessing VM properties at run time
+Whenever we run a Java program we can pass properties to the JVM running it. Often useful properties are the language and the locale. Suppose we specify the following VM properties in IntelliJ (Edit Configuration/VM options):
+```text
+-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
+```
+
+Using SpEL it is possible to access these properties at run time as:
+```java
+        //get system properties
+        final Properties properties = System.getProperties();
+
+        // instantiate an evaluation context
+        StandardEvaluationContext propsContext = new StandardEvaluationContext();
+
+        // set a property in the evaluation context. The property will be of type java.util.Properties
+        propsContext.setVariable("systemProperties", properties);
+
+        // set the expression, but do not evaluate it yet.
+        // Expression expCountry = ;
+
+        // use the evaluation context to parse an expression
+        String valCountry = (String) parser.parseExpression("#systemProperties['user.country']")
+                                    .getValue(propsContext);
+
+        System.out.println("VM option is: "+ valCountry); // VM option is: CU
+```
+
 

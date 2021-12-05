@@ -47,6 +47,10 @@ public class User {
         this.timeZone = timeZone;
     }
 
+    public String sayHello (){
+        return "Hello from user object!";
+    }
+
     @Override
     public String toString() {
         return "User{" +
