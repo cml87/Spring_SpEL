@@ -177,4 +177,112 @@ Using SpEL it is possible to access these properties at run time as:
         System.out.println("VM option is: "+ valCountry); // VM option is: CU
 ```
 
+I don't understand the notation `"#systemProperties['user.country']"` though. 
 
+## the @Value annotation with SpEL expressions
+The `@Value` annotation is used to specify default values or inject values into fields of Spring managed beans. It can be placed in fields, methods and constructor parameters to specify default values.
+It must always be passed a String, which in turn may signify a simple String literal, a system or application property or a SpEL expression.
+
+**See https://stackabuse.com/the-value-annotation-in-spring/**
+
+Below are some examples for SpEL expressions:
+```java
+@Value("#{'John Doe'}")
+private String name;
+```
+```java
+@Value("#{30}")
+private int age;
+```
+
+
+We can use it to specify a common value to all parameters of a method, for example a setter:
+```java
+@Value("#{systemProperties['user.timezone']}")
+public void setTimeZone(String timeZone){
+    this.timeZone = timeZone;
+}
+```
+If we want to use `@Value` to pass specific values to each method parameter, we can use it at the parameter level instead.
+
+<i>**`@Value` is processed by the BeanPostProcessor class. Therefore, it will be invoked when Spring is building the Spring context and instantiating beans.**</i>
+
+SpEL expressions allow calling methods and performing all common mathematical and boolean operations, <u> **all inside a string**</u>. With the `@Value` annotation, which can only receive a String argument, we can then inject the result of these complex operations into a bean's primitive field or class type dependency, as well as into any method/constructor argument. Without SpEL, the `@Value` annotation would be limited to receiving simple String literals or properties.
+
+Moreover, insider a SpEL expression we can access system properties through the predefined variable `systemProperties`. In the example below, we use setter injection to set the country, language and timeZone fields of the `user` bean. We pass to each setter argument the result of interpreting the SpEL expression inside the `@Value` annotation annotating it. Notice also how we access fields of the `user` bean to inject values in fields of the `order` bean, all through SpEL expressions and the `@Value` annotation, and how static methods are called inside a SpEL expression: `T(java.text.NumberFormat)`.
+```java
+
+@Component("user")
+public class User {
+
+    @Value("#{'John Doe'}")
+    private String name;
+    @Value("#{30}")
+    private int age;
+    private String country;
+    private String language;
+    private String timeZone;
+
+    public User(){}
+
+    public User(@Value("#{systemProperties['user.country']}")String country,
+                @Value("#{systemProperties['user.language']}")String language) {
+        this.country = country;
+        this.language = language;
+    }
+
+    @Value("#{systemProperties['user.country']}")
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    @Value("#{systemProperties['user.language']}")
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    // systemProperties is a predefined variable
+    @Value("#{systemProperties['user.timezone']}")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    // other getters and setters
+}
+```
+```java
+@Component("order")
+public class Order {
+
+    @Value("#{100.55 + 500.75 + 400.66}")
+    private double amount;
+
+    @Value("#{order.amount >= 1000 ? order.amount *5/100 : 0}")
+    private double discount;
+
+    @Value("#{user.country == 'US' and user.timeZone == 'America/New York' ? 3 : 14}")
+    private int daysToDeliver;
+
+    @Value("#{user.country}")
+    private String origin;
+
+    @Value("#{ T(java.text.NumberFormat).getCurrencyInstance(T(java.util.Locale).getDefault()).format(order.amount)}")
+    private String formattedAmount;
+
+   // getters and setters   
+ 
+}
+```
+From the `main()` we can test these two beans as (VM options: `-Duser.language=en -Duser.country=US -Duser.timezone=Europe/New_York`) :
+```java
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class); 
+
+        User user = applicationContext.getBean("user", User.class);
+        System.out.println(user.toString());
+        // User{name='John Doe', age=30, country='US', language='en', timeZone='Europe/New_York'}
+
+        Order order = applicationContext.getBean("order", Order.class);
+        System.out.println(order);
+        // Order{amount=1001.96, discount=50.098, daysToDeliver=14, origin='US', formattedAmount='$1,001.96'}
+
+```

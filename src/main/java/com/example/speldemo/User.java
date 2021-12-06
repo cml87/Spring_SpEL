@@ -1,11 +1,26 @@
 package com.example.speldemo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component("user")
 public class User {
 
-    private String name, age, country, language, timeZone;
+    @Value("#{'John Doe'}")
+    private String name;
+    @Value("#{30}")
+    private int age;
+    private String country;
+    private String language;
+    private String timeZone;
+
+    public User(){}
+
+    public User(@Value("#{systemProperties['user.country']}")String country,
+                @Value("#{systemProperties['user.language']}")String language) {
+        this.country = country;
+        this.language = language;
+    }
 
     public String getName() {
         return name;
@@ -15,11 +30,11 @@ public class User {
         this.name = name;
     }
 
-    public String getAge() {
+    public int getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(int age) {
         this.age = age;
     }
 
@@ -27,6 +42,7 @@ public class User {
         return country;
     }
 
+    @Value("#{systemProperties['user.country']}")
     public void setCountry(String country) {
         this.country = country;
     }
@@ -34,7 +50,7 @@ public class User {
     public String getLanguage() {
         return language;
     }
-
+    @Value("#{systemProperties['user.language']}")
     public void setLanguage(String language) {
         this.language = language;
     }
@@ -43,22 +59,25 @@ public class User {
         return timeZone;
     }
 
+    // systemProperties is a predefined variable
+    @Value("#{systemProperties['user.timezone']}")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
-    }
-
-    public String sayHello (){
-        return "Hello from user object!";
     }
 
     @Override
     public String toString() {
         return "User{" +
                 "name='" + name + '\'' +
-                ", age='" + age + '\'' +
+                ", age=" + age +
                 ", country='" + country + '\'' +
                 ", language='" + language + '\'' +
                 ", timeZone='" + timeZone + '\'' +
                 '}';
     }
+
+    public String sayHello(){
+        return "Hello!";
+    }
+
 }
