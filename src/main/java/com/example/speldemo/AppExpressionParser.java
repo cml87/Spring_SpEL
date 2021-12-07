@@ -1,6 +1,7 @@
 package com.example.speldemo;
 
 import com.example.speldemo.data.Order;
+import com.example.speldemo.data.Shipping;
 import com.example.speldemo.data.User;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -31,6 +32,10 @@ public class AppExpressionParser {
 
         Order order = applicationContext.getBean("order", Order.class);
         System.out.println(order);
+
+        System.out.println("------------------------");
+
+        System.out.printf("Shipping locations for the user of country [%s]: %s", user.getCountry(), order.getShippingLocations());
 
 
         //-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
