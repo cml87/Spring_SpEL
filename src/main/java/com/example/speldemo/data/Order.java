@@ -1,4 +1,4 @@
-package com.example.speldemo;
+package com.example.speldemo.data;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

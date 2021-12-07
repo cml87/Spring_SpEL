@@ -1,5 +1,7 @@
 package com.example.speldemo;
 
+import com.example.speldemo.data.Order;
+import com.example.speldemo.data.User;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.expression.Expression;
