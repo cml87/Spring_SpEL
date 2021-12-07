@@ -39,6 +39,10 @@ public class AppExpressionParser {
         System.out.printf("Shipping locations for the user of country [%s] out of its country's capital: %s", user.getCountry(),
                 order.getNonCapitalShippingLocations());
 
+        System.out.println("\n\nWestern shipping locations are: "+ order.getWesternShippingLocations());
+
+        System.out.println("\nNof cheap shipping locations (cost < 10) for the order: "+order.getNoOfCheapShippingLocations());
+
         //-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
         /*
         StandardEvaluationContext propsContext = new StandardEvaluationContext();

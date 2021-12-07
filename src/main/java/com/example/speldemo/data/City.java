@@ -9,7 +9,7 @@ import java.security.SecureRandom;
 public class City {
 
     private String name;
-    private double shipping;
+    private double shipping; // shipping cost
     private Boolean isCapital;
 
     public City(){}

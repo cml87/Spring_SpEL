@@ -296,7 +296,7 @@ With SpEL we can inject lists into fields of a bean, which are of type list too.
 public class City {
 
     private String name;
-    private double shipping;
+    private double shipping; // shipping cost
     private Boolean isCapital; // whether this city is the capital of its country
 
     // getters and setters
@@ -375,3 +375,22 @@ What the `@Value` annotation in the `shippingLocations` field has here is a norm
 
 The `@Value` annotation on field `nonCapitalShippingLocations`, on the other hand, does a filtering. It filters the cities held by field `shippingLocations` to get only those out of the user, or order, country's capital. Notice here how we can <u>access injected fields of a bean to set other fields in the same bean</u>. 
 
+The `shipping` bean as a field `locationsByCountry` holding a map of countries to possible shipping location in the country. Suppose we want to separate the elements in this map object corresponding to western countries. We could do this and inject the result into a another field of the `order` bean as:
+
+```java
+    // ...
+    
+    @Value("#{(shipping.locationsByCountry.?[key=='UK' or key=='US' or key=='DK'])}")
+    private Map<String,List<City>> westernShippingLocations;
+    
+    // ...
+```
+Last, lets say we want to inject into a field of the `order` bean the number of "cheap" shipping locations for a given user/order. As cheap we will intend shipping cost below 10. We can set the `noOfCheapShippingLocations` as:
+```java
+    // ...
+    // 'shipping' is a field of the 'city' bean
+    // 'order.shippingLocation' is a list of cities
+    @Value("#{order.shippingLocations.?[shipping<10].size()}")
+    private Integer noOfCheapShippingLocations;
+    // ...
+```

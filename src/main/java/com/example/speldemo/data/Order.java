@@ -1,10 +1,12 @@
 package com.example.speldemo.data;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.swing.plaf.basic.BasicCheckBoxMenuItemUI;
 import java.util.List;
+import java.util.Map;
 
 @Component("order")
 public class Order {
@@ -32,6 +34,30 @@ public class Order {
     // populate this with the shipping locations (cities), out of the user country's capital city
     @Value("#{order.shippingLocations.?[isCapital != true]}")
     private List<City> nonCapitalShippingLocations;
+
+    @Value("#{(shipping.locationsByCountry.?[key=='UK' or key=='US' or key=='DK'])}")
+    private Map<String,List<City>> westernShippingLocations;
+
+    @Value("#{order.shippingLocations.?[ shipping < 10 ].size()}")
+    private Integer noOfCheapShippingLocations;
+
+
+    public Integer getNoOfCheapShippingLocations() {
+        return noOfCheapShippingLocations;
+    }
+
+    public void setNoOfCheapShippingLocations(Integer noOfCheapShippingLocations) {
+        this.noOfCheapShippingLocations = noOfCheapShippingLocations;
+    }
+
+    public Map<String, List<City>> getWesternShippingLocations() {
+        return westernShippingLocations;
+    }
+
+    public void setWesternShippingLocations(Map<String, List<City>> westernShippingLocations) {
+        this.westernShippingLocations = westernShippingLocations;
+    }
+
 
     public List<City> getNonCapitalShippingLocations() {
         return nonCapitalShippingLocations;
