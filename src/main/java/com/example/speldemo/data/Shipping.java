@@ -10,7 +10,7 @@ import java.util.Map;
 @Component("shipping")
 public class Shipping {
 
-    // shipping locations available per country
+    // shipping locations (cities) available per country
     private Map<String, List<City>> locationsByCountry;
 
     // shipping charges by locations

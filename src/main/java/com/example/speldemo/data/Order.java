@@ -3,6 +3,7 @@ package com.example.speldemo.data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.swing.plaf.basic.BasicCheckBoxMenuItemUI;
 import java.util.List;
 
 @Component("order")
@@ -28,6 +29,17 @@ public class Order {
     @Value("#{shipping.locationsByCountry[user.country]}")
     private List<City> shippingLocations;
 
+    // populate this with the shipping locations (cities), out of the user country's capital city
+    @Value("#{order.shippingLocations.?[isCapital != true]}")
+    private List<City> nonCapitalShippingLocations;
+
+    public List<City> getNonCapitalShippingLocations() {
+        return nonCapitalShippingLocations;
+    }
+
+    public void setNonCapitalShippingLocations(List<City> nonCapitalShippingLocations) {
+        this.nonCapitalShippingLocations = nonCapitalShippingLocations;
+    }
 
     public List<City> getShippingLocations() {
         return shippingLocations;

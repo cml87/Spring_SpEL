@@ -36,7 +36,8 @@ public class AppExpressionParser {
         System.out.println("------------------------");
 
         System.out.printf("Shipping locations for the user of country [%s]: %s", user.getCountry(), order.getShippingLocations());
-
+        System.out.printf("Shipping locations for the user of country [%s] out of its country's capital: %s", user.getCountry(),
+                order.getNonCapitalShippingLocations());
 
         //-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
         /*

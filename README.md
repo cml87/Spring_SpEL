@@ -288,5 +288,90 @@ From the `main()` we can test these two beans as (VM options: `-Duser.language=e
         // Order{amount=1001.96, discount=50.098, daysToDeliver=14, origin='US', formattedAmount='$1,001.96'}
 ```
 
-## Accessing and manipulating Lists and Maps
+## Accessing and filtering Lists and Maps
+
+With SpEL we can inject lists into fields of a bean, which are of type list too. Here is an example. Suppose we have a bean with possible shipping locations (cities) for a given user according to his country:
+```java
+@Component("city")
+public class City {
+
+    private String name;
+    private double shipping;
+    private Boolean isCapital; // whether this city is the capital of its country
+
+    // getters and setters
+    
+}
+```
+```java
+@Component("shipping")
+public class Shipping {
+
+    // shipping locations (cities) available per country
+    private Map<String, List<City>> locationsByCountry;
+
+    // shipping charges by locations
+    private Map<String, List<City>> chargesByLocation;
+
+    public Shipping() {
+        List<City> usCities = new ArrayList<>();
+        usCities.add(new City("Alabama",8.50,false));
+        usCities.add(new City("New Jersey",10.50,false));
+        usCities.add(new City("New York",10.50,false));
+        usCities.add(new City("Washington",10.50,true));
+
+        List<City> ukCities = new ArrayList<>();
+        ukCities.add(new City("London",25.50,true));
+        ukCities.add(new City("Cambridge",20.50,false));
+        ukCities.add(new City("Leeds",15.50,false));
+
+        List<City> dkCities = new ArrayList<>();
+        dkCities.add(new City("Copenhagen",20.50,true));
+        dkCities.add(new City("Hadsund",12.50,false));
+        dkCities.add(new City("Arden",14.50,false));
+
+        List<City> myCities = new ArrayList<>();
+        myCities.add(new City("Kuala Lumpur",5.50,true));
+        myCities.add(new City("Johor Bahru",3.50,false));
+
+        this.locationsByCountry = new HashMap<>();
+        this.locationsByCountry.put("US",usCities);
+        this.locationsByCountry.put("UK",ukCities);
+        this.locationsByCountry.put("DK",dkCities);
+        this.locationsByCountry.put("MY",myCities);
+
+        this.chargesByLocation = new HashMap<>();
+        this.chargesByLocation.put("US", usCities);
+        this.chargesByLocation.put("UK", ukCities);
+        this.chargesByLocation.put("DK", dkCities);
+        this.chargesByLocation.put("MY", myCities);
+    }
+
+    // getters and setters
+     
+}
+```
+Then, in an `order` bean we can inject this information into the `shippingLocations` field, filtering by the user's country as: 
+```java
+@Component("order")
+public class Order {
+
+    // ...
+
+    //populate this list with available shipping locations for the user's country
+    @Value("#{shipping.locationsByCountry[user.country]}")
+    private List<City> shippingLocations;
+
+    // populate this with the shipping locations (cities), out of the user country's capital city.
+    // 'isCapital' is a field of the 'city' bean 
+    @Value("#{order.shippingLocations.?[isCapital != true]}")
+    private List<City> nonCapitalShippingLocations;
+    
+    // ...
+
+}
+```
+What the `@Value` annotation in the `shippingLocations` field has here is a normal access-by-key to a Java map object; the key is the `user` bean's country field.
+
+The `@Value` annotation on field `nonCapitalShippingLocations`, on the other hand, does a filtering. It filters the cities held by field `shippingLocations` to get only those out of the user, or order, country's capital. Notice here how we can <u>access injected fields of a bean to set other fields in the same bean</u>. 
 
