@@ -412,3 +412,130 @@ A use example in our `order` bean can be an `orderSummary` dependency set as:
 ```
 Notice how different evaluation blocks are evaluated and inserted inside a same string to be injected into the field.
 
+## SpEL with xml
+If our application defines and wires its beans through xml, we will need to inject the SpEL expression in this file as well. Below is how we would do all what has been shown above, but with xml:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="user" class="com.example.speldemoxml.data.User">
+        <property name="name" value="#{'John Doe'}"/>
+        <property name="age" value="#{30}"/>
+        <property name="country" value="#{systemProperties['user.country']}"/>
+        <property name="timeZone" value="#{systemProperties['user.timezone']}"/>
+    </bean>
+
+
+    <bean id="city" class="com.example.speldemoxml.data.City">
+    </bean>
+    <bean id="shipping" class="com.example.speldemoxml.data.Shipping">
+    </bean>
+
+    <bean id="order" class="com.example.speldemoxml.data.Order">
+        <property name="amount" value="#{100.55 + 500.75 + 400.66}"/>
+    </bean>
+
+    <bean id="order2" class="com.example.speldemoxml.data.Order">
+        <property name="discount" value="#{order.amount >= 1000 ? order.amount * 5 / 100 : 0 }"/>
+        <property name="daysToDeliver" value="#{user.country == 'US' and user.timeZone == 'America/New_York' ? 3 : 14}" />
+        <property name="formattedAmount" value="#{T(java.text.NumberFormat).getCurrencyInstance(T(java.util.Locale).getDefault()).format(order.amount)}"/>
+        <property name="shippingLocations" value="#{shipping.locationsByCountry[user.country]}"/>
+        <property name="westernShippingLocations" value="#{(shipping.locationsByCountry.?[key == 'UK' or key == 'US' or key == 'DK'])}"/>
+    </bean>
+
+    <bean id="order3" class="com.example.speldemoxml.data.Order">
+        <property name="nonCapitalShippingLocations" value="#{order2.shippingLocations.?[isCapital != true]}"/>
+        <property name="noOfCheapShippingLocations" value="#{order2.shippingLocations.?[shipping &lt; 10].size()}"/>
+        <property name="orderSummary" value="#{user.name} your order total is #{order2.formattedAmount} and the payable amount with 5% discount is #{order.amount - order2.discount}"/>
+    </bean>
+</beans>
+```
+And this is a main() class to run the beans defined in this xml  (I don't understand it though):
+```java
+@Configuration
+@ImportResource({"classpath*:applicationContext.xml"})
+public class AppExpressionParserXml {
+
+    @Autowired
+    User user;
+
+    @Autowired
+    Order order;
+
+    @Autowired
+    Order order2;
+
+    @Autowired
+    Order order3;
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppExpressionParserXml.class);
+        
+        try {
+            
+            AppExpressionParserXml AppExpressionParserXml = (AppExpressionParserXml) context.getBean("appExpressionParserXml");
+            
+            System.out.println("Customer Name: " + AppExpressionParserXml.getUser().getName());
+            System.out.println("Age: " + AppExpressionParserXml.getUser().getAge());
+            System.out.println("Country: " + AppExpressionParserXml.getUser().getCountry());
+            System.out.println("Order Amount: " + AppExpressionParserXml.getOrder().getAmount());
+            System.out.println("Discount: " + AppExpressionParserXml.getOrder2().getDiscount());
+            System.out.println("Days to deliver: " + AppExpressionParserXml.getOrder2().getDaysToDeliver());
+            System.out.println("Formatted Amount: " + AppExpressionParserXml.getOrder2().getFormattedAmount());
+            System.out.println("Shipping Locations: " );
+            for(City city : AppExpressionParserXml.getOrder2().getShippingLocations()) {
+                System.out.println(city.getName());
+            }
+
+            System.out.println("Western Shipping Locations: " );
+            for(Iterator i = AppExpressionParserXml.getOrder2().getWesternShippingLocations().values().iterator(); i.hasNext();) {
+                List<City> cities = (List<City>)i.next();
+                for(City city : cities) {
+                    System.out.println(city.getName());
+                }
+            }
+
+            System.out.println("Non Capital Shipping Locations: " );
+            for(City city : AppExpressionParserXml.getOrder3().getNonCapitalShippingLocations()) {
+                System.out.println(city.getName());
+            }
+
+            System.out.println("Cheap Shipping Locations: " + AppExpressionParserXml.getOrder3().getNoOfCheapShippingLocations());
+
+            System.out.println("Order Summary " + AppExpressionParserXml.getOrder3().getOrderSummary());
+
+        } finally {
+            context.close();
+        }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public Order getOrder2() {
+        return order2;
+    }
+
+    public Order getOrder3() {
+        return order3;
+    }
+}
+```
+
+## Typical usages of SpEL
+In general, and as we have seen above, typical use case of SpEL are:
+1. Dependency inject an existing bean, or its fields, into another bean.
+2. Dependency inject a bean based on environment conditions
+3. Access and manipulate object graph at run time??
+
+SpEL is a good choice for dependency injection based on conditional situations.
