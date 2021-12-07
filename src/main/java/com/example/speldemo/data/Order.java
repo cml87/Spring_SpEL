@@ -41,6 +41,19 @@ public class Order {
     @Value("#{order.shippingLocations.?[ shipping < 10 ].size()}")
     private Integer noOfCheapShippingLocations;
 
+    @Value("#{user.name} your order total is #{order.formattedAmount} and the payable " +
+            "amount with 5% discount is #{order.amount - order.discount}")
+    private String orderSummary;
+
+
+    public String getOrderSummary() {
+        return orderSummary;
+    }
+
+    public void setOrderSummary(String orderSummary) {
+        this.orderSummary = orderSummary;
+    }
+
 
     public Integer getNoOfCheapShippingLocations() {
         return noOfCheapShippingLocations;

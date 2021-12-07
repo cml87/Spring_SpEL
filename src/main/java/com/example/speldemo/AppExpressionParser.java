@@ -43,22 +43,7 @@ public class AppExpressionParser {
 
         System.out.println("\nNof cheap shipping locations (cost < 10) for the order: "+order.getNoOfCheapShippingLocations());
 
-        //-Duser.language=en -Duser.country=CU -Duser.timezone=Europe/Rome
-        /*
-        StandardEvaluationContext propsContext = new StandardEvaluationContext();
-        propsContext.setVariable("systemProperties",System.getProperties());
-        Expression expCountry = parser.parseExpression("#systemProperties['user.country']");
-        parser.parseExpression("country").setValue(userContext,expCountry.getValue(propsContext));
-        System.out.println(user.getCountry());
-
-        Expression expLanguage = parser.parseExpression("#systemProperties['user.language']");
-        parser.parseExpression("language").setValue(userContext,expLanguage.getValue(propsContext));
-        System.out.println(user.getLanguage());
-
-        Expression expTimeZone = parser.parseExpression("#systemProperties['user.timezone']");
-        parser.parseExpression("timeZone").setValue(userContext,expTimeZone.getValue(propsContext));
-        System.out.println(user.getTimeZone());
-        * */
+        System.out.println("\nOrder summary is: "+order.getOrderSummary());
 
     }
 

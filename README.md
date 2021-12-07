@@ -13,7 +13,7 @@ Spring Expression Language SpEL is a powerful tool that allow to manipulate and 
 With SpEL we evaluate string expression at run time. The result of the evaluation can be used to dynamically inject beans,  or values into beans.
 
 ## SpEL syntax
-SpEL expressions are always strings enclosed in double quotes. If we are accessing variables in the expression, we use a hash symbol (#) before the variable name, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes `'...'`.  
+SpEL expressions are always strings enclosed in double quotes. If we are accessing variables in the expression, we use a hash symbol (#) before the variable name, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes `'...'`.  The block represented by `#{}` is called an <u>evaluation block</u>.
 
 SpEL can be used in plain old Java code, it only needs Spring core libraries. Here is a pom file with the needed dependencies, followed by some example use cases in a main() method.
 
@@ -207,7 +207,7 @@ If we want to use `@Value` to pass specific values to each method parameter, we 
 
 <i>**`@Value` is processed by the BeanPostProcessor class. Therefore, it will be invoked when Spring is building the Spring context and instantiating beans.**</i>
 
-SpEL expressions allow calling methods and performing all common mathematical and boolean operations, <u> **all inside a string**</u>. With the `@Value` annotation, which can only receive a String argument, we can then inject the result of these complex operations into a bean's primitive field or class type dependency, as well as into any method/constructor argument. Without SpEL, the `@Value` annotation would be limited to receiving simple String literals or properties.
+**In general, SpEL expressions allow calling methods and performing all common mathematical and boolean operations of normal Java code, <u>all inside a string</u>. With the `@Value` annotation, which can only receive a String argument, we can then inject the result of these complex operations into a bean's primitive field or class type dependency, as well as into any method/constructor argument. Without SpEL, the `@Value` annotation would be limited to receiving simple String literals or properties.**
 
 Moreover, insider a SpEL expression we can access system properties through the predefined variable `systemProperties`. In the example below, we use setter injection to set the country, language and timeZone fields of the `user` bean. We pass to each setter argument the result of interpreting the SpEL expression inside the `@Value` annotation annotating it. Notice also how we access fields of the `user` bean to inject values in fields of the `order` bean, all through SpEL expressions and the `@Value` annotation, and how static methods are called inside a SpEL expression: `T(java.text.NumberFormat)`.
 ```java
@@ -394,3 +394,21 @@ Last, lets say we want to inject into a field of the `order` bean the number of 
     private Integer noOfCheapShippingLocations;
     // ...
 ```
+
+## Expression Template
+Expression templates let us mix literal text with one or more evaluation blocks, concatenating all of them in a single string. In plain Java code SpEL expression templating is done as:
+```java
+    parser.parseExpression("#{name} your order total is", new TemplateParserContext());
+```
+The `TemplateParserContext` is an object specifying the markers for the start and end of an evaluation block, among other things. The default for the start is '#{' and for the end '}'. These are the default prefix and suffix, and can be personalized/customized if desired.
+
+A use example in our `order` bean can be an `orderSummary` dependency set as:
+```java
+    // ...
+    @Value("#{user.name} your order total is #{order.formattedAmount} and the payable " +
+            "amount with 5% discount is #{order.amount - order.discount}")
+    private String orderSummary; 
+    // ...
+```
+Notice how different evaluation blocks are evaluated and inserted inside a same string to be injected into the field.
+
