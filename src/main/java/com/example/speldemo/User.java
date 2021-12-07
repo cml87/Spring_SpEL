@@ -1,5 +1,6 @@
 package com.example.speldemo;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ public class User {
 
     public User(){}
 
+    @Autowired
     public User(@Value("#{systemProperties['user.country']}")String country,
                 @Value("#{systemProperties['user.language']}")String language) {
         this.country = country;
@@ -42,7 +44,7 @@ public class User {
         return country;
     }
 
-    @Value("#{systemProperties['user.country']}")
+    //@Value("#{systemProperties['user.country']}")
     public void setCountry(String country) {
         this.country = country;
     }
@@ -50,7 +52,7 @@ public class User {
     public String getLanguage() {
         return language;
     }
-    @Value("#{systemProperties['user.language']}")
+  //  @Value("#{systemProperties['user.language']}")
     public void setLanguage(String language) {
         this.language = language;
     }

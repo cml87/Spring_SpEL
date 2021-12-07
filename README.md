@@ -250,6 +250,8 @@ public class User {
     // other getters and setters
 }
 ```
+If in the `user` bean we want instead to inject the country and language primitive dependencies through the constructor, we would need to annotate it with `@Autowired`.
+An `order` bean that uses the `user` bean in SpEL expressions is:
 ```java
 @Component("order")
 public class Order {
@@ -284,5 +286,7 @@ From the `main()` we can test these two beans as (VM options: `-Duser.language=e
         Order order = applicationContext.getBean("order", Order.class);
         System.out.println(order);
         // Order{amount=1001.96, discount=50.098, daysToDeliver=14, origin='US', formattedAmount='$1,001.96'}
-
 ```
+
+## Accessing and manipulating Lists and Maps
+
