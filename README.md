@@ -5,7 +5,7 @@ It will cover the topics:
 - Writing and parsing basic SpEL expressions
 - Using evaluation context
 - Using SpEL with @Value annotation
-- Collection manipulatin with SpEL
+- Collection manipulating with SpEL
 - Expression templating
 
 Spring Expression Language SpEL is a powerful tool that allow to manipulate and query objects at run time. Also manipulating objects graph at run time ??. This makes possible dynamic beans wiring. It's available since Spring 3. SpEL is part of Spring Core.
@@ -13,7 +13,9 @@ Spring Expression Language SpEL is a powerful tool that allow to manipulate and 
 With SpEL we evaluate string expression at run time. The result of the evaluation can be used to dynamically inject beans,  or values into beans.
 
 ## SpEL syntax
-SpEL expressions are always strings enclosed in double quotes. If we are accessing variables in the expression, we use a hash symbol (#) before the variable name, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes `'...'`.  The block represented by `#{}` is called an <u>evaluation block</u>.
+SpEL expressions are always strings enclosed in double quotes. If we are accessing variables in the expression, we use a hash symbol (#) before the variable name, like `"#variableName"`. Furthermore, if we use SpEL expression in metadata, like annotations and xml, we must enclose the whole expression in curly braces, like `"#{expression}"`. Strings inside a SpEL expression must be enclosed with single quotes `'...'`.  The block represented by `#{}` is called an <u>evaluation block</u>. If we are instead loading a property, the evaluation block is marked by `${}`.
+
+We can pass almost any Java code into a SpEL expression, with some specificities though, such as the boolean operators & and |, which are specified with the strings 'and' and 'or', respectively. 
 
 SpEL can be used in plain old Java code, it only needs Spring core libraries. Here is a pom file with the needed dependencies, followed by some example use cases in a main() method.
 
