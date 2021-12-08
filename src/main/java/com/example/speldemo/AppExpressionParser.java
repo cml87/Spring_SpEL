@@ -45,6 +45,9 @@ public class AppExpressionParser {
 
         System.out.println("\nOrder summary is: "+order.getOrderSummary());
 
+        order.systemProperties.forEach((key, value) -> System.out.println(key + ":" + value));
+
+
     }
 
 }

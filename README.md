@@ -183,8 +183,6 @@ I don't understand the notation `"#systemProperties['user.country']"` though.
 The `@Value` annotation is used to specify default values or inject values into fields of Spring managed beans. It can be placed in fields, methods and constructor parameters to specify default values.
 It must always be passed a String, which in turn may signify a simple String literal, a system or application property or a SpEL expression.
 
-**See https://stackabuse.com/the-value-annotation-in-spring/**
-
 Below are some examples for SpEL expressions:
 ```java
 @Value("#{'John Doe'}")
@@ -286,6 +284,22 @@ From the `main()` we can test these two beans as (VM options: `-Duser.language=e
         Order order = applicationContext.getBean("order", Order.class);
         System.out.println(order);
         // Order{amount=1001.96, discount=50.098, daysToDeliver=14, origin='US', formattedAmount='$1,001.96'}
+```
+
+## Injecting into Lists and Maps
+We can combine SpEL evaluation blocks, `#{}`, with properties evaluation blocks, `${}`, to inject Lists and Maps into fields. Suppose we have an application.properties files with properties as:
+```text
+// application.properties
+student.booksRead=Harry Potter,The Hobbit,Game of Thrones
+student.hobbies={indoor: 'reading, drawing', outdoor: 'fishing, hiking, bushcraft'}
+```
+We can inject the 'booksRead' list, and the 'student.hobbies' map into a list and a map field, respectively, as:
+```java
+@Value("#{'${student.booksRead}'.split(',')}")
+private List<String> booksRead;
+
+@Value("#{${student.hobbies}}")
+private Map<String, List<String>> hobbies;
 ```
 
 ## Accessing and filtering Lists and Maps
@@ -539,3 +553,92 @@ In general, and as we have seen above, typical use case of SpEL are:
 3. Access and manipulate object graph at run time??
 
 SpEL is a good choice for dependency injection based on conditional situations.
+
+# The @Value annotation 
+### by https://stackabuse.com/the-value-annotation-in-spring/
+
+`@Value` is a Java annotation used at the field level, or method/constructor level, or parameters level. It indicates a default value for the affected argument, to be injected during beans creation.
+
+`@Value` is processed by the BeanPostProcessor class. Therefore, methods annotated with it will be invoked when Spring is building the application context, either from Java configuration classes or xml files.
+
+There are two types of _evaluation blocks_ we can use in the string we pass to `@Value`. One is `${}`, and is used to pass application or system properties, like `@Value("${car.color}")` or `@Value("${user.name})`. The other is `#{}`, and is used to pass SpEL expressions, as we show below. 
+
+## Basic assignment
+With `@Value` we can insert simple literals into fields of a bean. Spring will convert the values into integers or booleans as needed:
+```java
+@Value("John")
+private String trainee;
+
+@Value("100")
+private int hoursOfCode;
+
+@Value("true")
+private boolean passedAssesmentTest;
+```
+
+## Spring Environment and default values
+Another use case is injecting values from properties file `application.properties`. Notice how it is specified a default value to be used when the property is not defined:
+```text
+// application.properties
+car.brand=Audi
+```
+```java
+@Value("${car.brand")
+private String brand;
+
+@Value("${car.color: white}")
+private String color;
+```
+
+## System Variables
+We can also access system variables which are stored as properties by Spring when our application at starts:
+```java
+@Value("${user.name}")
+// Or
+@Value("${username}")
+private String userName;
+
+@Value("${number.of.processors}")
+// Or
+@Value("${number_of_processors}")
+private int numberOfProcessors;
+
+@Value("${java.home}")
+private String java;
+```
+
+## Global method value
+Using `@Value` at a method level will pass the argument of this annotation equally to all parameters of the method. For example, in the fallowing method both the car's color and brand will be set after the car's brand passed to `@Value`:
+```java
+@Value("${car.brand}")
+public CarData setCarData(String color, String brand) {
+        carData.setCarColor(color);
+        carData.setCarBrand(brand);
+}
+```
+
+## Parameter method value
+If we want to pass values to specific parameters of a method, we use `@Value` at the parameter level as:
+```java
+@Value("${car.brand}")
+public CarData setCarData(@Value("${car.color}") String color, String brand) {
+    carData.setCarColor(color); // will get car.color
+    carData.setCarBrand(brand); // will get car.brand
+}
+```
+
+## @Value with SpEL
+SpEL expressions used in conjunction with the `@Value` annotation allow injecting the result of evaluating almost any Java code statement into fields, or parameters of a method/constructor. For example:
+```java
+// load an specific system propety
+@Value("#{systemProperties['user.name']}")
+private String userName;
+
+// load all properties in a field of the 'order' bean
+Value("#{systemProperties}")
+public Map<String, String> systemProperties;
+```
+```java
+// print all system properties in the main()
+order.systemProperties.forEach((key, value) -> System.out.println(key + ":" + value));
+```

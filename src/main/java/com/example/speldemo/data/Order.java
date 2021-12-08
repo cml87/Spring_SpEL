@@ -45,6 +45,9 @@ public class Order {
             "amount with 5% discount is #{order.amount - order.discount}")
     private String orderSummary;
 
+    @Value("#{systemProperties}")
+    public Map<String, String > systemProperties;
+
 
     public String getOrderSummary() {
         return orderSummary;
