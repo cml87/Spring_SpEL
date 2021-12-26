@@ -589,6 +589,7 @@ public class ReservationSystemListener implements MessageListener {
 // application.properties file
 minimumAgeYearsStr=21
 ```
+Notice that we can inject directly numeric values; Spring will parse the string representation of the number in the properties file, and will inject it into an integer field of a bean, for example, automatically.
 
 ## Typical usages of SpEL
 In general, and as we have seen above, typical use case of SpEL are:
