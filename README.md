@@ -433,7 +433,8 @@ If our application defines and wires its beans through xml, we will need to inje
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/context
@@ -546,6 +547,47 @@ public class AppExpressionParserXml {
         return order3;
     }
 }
+```
+
+## Injecting properties with SpEL and xml configuration
+In order to inject a property defined in the usual file `src/main/resources/application.properties` into a field of a bean, using xml configuration, we need to use an applicationContext.xml file (also in `src/main/resources`) as fallow:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="classpath:application.properties"/>
+
+    <bean name="reservationSystemListener"  class="com.example.jms.p2p.checkingapp.ReservationSystemListener">
+        <property name="minimumAgeYearsStr" value="${minimumAgeYearsStr}"/>
+    </bean>
+
+</beans>
+```
+This file defines a bean (`ReservationSystemListener`) and injects a string value for a String field of it called `minimumAgeYearsStr`, which must have a setter. The bean and the application.properties file can be:
+```java
+public class ReservationSystemListener implements MessageListener {
+
+    private String minimumAgeYearsStr;
+
+    public void setMinimumAgeYearsStr(String minimumAgeYearsStr) {
+        this.minimumAgeYearsStr = minimumAgeYearsStr;
+    }
+
+     @Override
+    public void onMessage(Message message) {
+        // ...
+    }
+}
+```
+```text
+// application.properties file
+minimumAgeYearsStr=21
 ```
 
 ## Typical usages of SpEL
